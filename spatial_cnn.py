@@ -33,15 +33,15 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='man
 def main():
     global arg
     arg = parser.parse_args()
-    print arg
+    print(arg)
 
     #Prepare DataLoader
     data_loader = dataloader.spatial_dataloader(
                         BATCH_SIZE=arg.batch_size,
-                        num_workers=8,
-                        path='/home/ubuntu/data/UCF101/spatial_no_sampled/',
-                        ucf_list ='/home/ubuntu/cvlab/pytorch/ucf101_two_stream/github/UCF_list/',
-                        ucf_split ='01', 
+                        num_workers=0,
+                        path='/home/lb/video_action_recognition/data/jpegs_256',
+                        ucf_list ='/home/lb/video_action_recognition/data/datalists',
+                        ucf_split ='01',
                         )
     
     train_loader, test_loader, test_video = data_loader.run()
@@ -85,19 +85,20 @@ class Spatial_CNN():
     def resume_and_evaluate(self):
         if self.resume:
             if os.path.isfile(self.resume):
-                print("==> loading checkpoint '{}'".format(self.resume))
+                print(("==> loading checkpoint '{}'".format(self.resume)))
                 checkpoint = torch.load(self.resume)
                 self.start_epoch = checkpoint['epoch']
                 self.best_prec1 = checkpoint['best_prec1']
                 self.model.load_state_dict(checkpoint['state_dict'])
                 self.optimizer.load_state_dict(checkpoint['optimizer'])
-                print("==> loaded checkpoint '{}' (epoch {}) (best_prec1 {})"
-                  .format(self.resume, checkpoint['epoch'], self.best_prec1))
+                print(("==> loaded checkpoint '{}' (epoch {}) (best_prec1 {})"
+                  .format(self.resume, checkpoint['epoch'], self.best_prec1)))
             else:
-                print("==> no checkpoint found at '{}'".format(self.resume))
+                print(("==> no checkpoint found at '{}'".format(self.resume)))
         if self.evaluate:
             self.epoch = 0
-            prec1, val_loss = self.validate_1epoch()
+            self.validate_1epoch()
+            #prec1, val_loss = self.validate_1epoch()
             return
 
     def run(self):
@@ -105,28 +106,28 @@ class Spatial_CNN():
         self.resume_and_evaluate()
         cudnn.benchmark = True
         
-        for self.epoch in range(self.start_epoch, self.nb_epochs):
-            self.train_1epoch()
-            prec1, val_loss = self.validate_1epoch()
-            is_best = prec1 > self.best_prec1
-            #lr_scheduler
-            self.scheduler.step(val_loss)
-            # save model
-            if is_best:
-                self.best_prec1 = prec1
-                with open('record/spatial/spatial_video_preds.pickle','wb') as f:
-                    pickle.dump(self.dic_video_level_preds,f)
-                f.close()
-            
-            save_checkpoint({
-                'epoch': self.epoch,
-                'state_dict': self.model.state_dict(),
-                'best_prec1': self.best_prec1,
-                'optimizer' : self.optimizer.state_dict()
-            },is_best,'record/spatial/checkpoint.pth.tar','record/spatial/model_best.pth.tar')
+        # for self.epoch in range(self.start_epoch, self.nb_epochs):
+        #     self.train_1epoch()
+        #     prec1, val_loss = self.validate_1epoch()
+        #     is_best = prec1 > self.best_prec1
+        #     #lr_scheduler
+        #     self.scheduler.step(val_loss)
+        #     # save model
+        #     if is_best:
+        #         self.best_prec1 = prec1
+        #         with open('record/spatial/spatial_video_preds.pickle','wb') as f:
+        #             pickle.dump(self.dic_video_level_preds,f)
+        #         f.close()
+        #
+        #     save_checkpoint({
+        #         'epoch': self.epoch,
+        #         'state_dict': self.model.state_dict(),
+        #         'best_prec1': self.best_prec1,
+        #         'optimizer' : self.optimizer.state_dict()
+        #     },is_best,'record/spatial/checkpoint.pth.tar','record/spatial/model_best.pth.tar')
 
     def train_1epoch(self):
-        print('==> Epoch:[{0}/{1}][training stage]'.format(self.epoch, self.nb_epochs))
+        print(('==> Epoch:[{0}/{1}][training stage]'.format(self.epoch, self.nb_epochs)))
         batch_time = AverageMeter()
         data_time = AverageMeter()
         losses = AverageMeter()
@@ -158,9 +159,9 @@ class Spatial_CNN():
 
             # measure accuracy and record loss
             prec1, prec5 = accuracy(output.data, label, topk=(1, 5))
-            losses.update(loss.data[0], data.size(0))
-            top1.update(prec1[0], data.size(0))
-            top5.update(prec5[0], data.size(0))
+            losses.update(loss.data[0], data.item())
+            top1.update(prec1[0], data.item())
+            top5.update(prec5[0], data.item())
 
             # compute gradient and do SGD step
             self.optimizer.zero_grad()
@@ -171,18 +172,19 @@ class Spatial_CNN():
             batch_time.update(time.time() - end)
             end = time.time()
         
-        info = {'Epoch':[self.epoch],
-                'Batch Time':[round(batch_time.avg,3)],
-                'Data Time':[round(data_time.avg,3)],
-                'Loss':[round(losses.avg,5)],
-                'Prec@1':[round(top1.avg,4)],
-                'Prec@5':[round(top5.avg,4)],
-                'lr': self.optimizer.param_groups[0]['lr']
-                }
-        record_info(info, 'record/spatial/rgb_train.csv','train')
+        # info = {'Epoch':[self.epoch],
+        #         'Batch Time':[round(batch_time.avg,3)],
+        #         'Data Time':[round(data_time.avg,3)],
+        #         'Loss':[round(losses.avg,5)],
+        #         'Prec@1':[round(top1.avg,4)],
+        #         'Prec@5':[round(top5.avg,4)],
+        #         'lr': self.optimizer.param_groups[0]['lr']
+        #         }
+        # record_info(info, 'record/spatial/rgb_train.csv','train')
 
     def validate_1epoch(self):
-        print('==> Epoch:[{0}/{1}][validation stage]'.format(self.epoch, self.nb_epochs))
+
+        print(('==> Epoch:[{0}/{1}][validation stage]'.format(self.epoch, self.nb_epochs)))
         batch_time = AverageMeter()
         losses = AverageMeter()
         top1 = AverageMeter()
@@ -192,6 +194,10 @@ class Spatial_CNN():
         self.dic_video_level_preds={}
         end = time.time()
         progress = tqdm(self.test_loader)
+
+
+        predict_result = []
+
         for i, (keys,data,label) in enumerate(progress):
             
             label = label.cuda(async=True)
@@ -206,23 +212,34 @@ class Spatial_CNN():
             #Calculate video level prediction
             preds = output.data.cpu().numpy()
             nb_data = preds.shape[0]
+
             for j in range(nb_data):
                 videoName = keys[j].split('/',1)[0]
-                if videoName not in self.dic_video_level_preds.keys():
+
+
+                if videoName not in list(self.dic_video_level_preds.keys()):
                     self.dic_video_level_preds[videoName] = preds[j,:]
                 else:
                     self.dic_video_level_preds[videoName] += preds[j,:]
 
-        video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
+                predict_result.append((name, classes) for name, classes in zip(keys, preds))
+
+        self.get_buaa_result()
+
+        with open('record/spatial/spatial_video_preds.pickle', 'wb') as f:
+             pickle.dump(self.dic_video_level_preds,f)
+             f.close()
+
+        # video_top1, video_top5, video_loss = self.frame2_video_level_accuracy()
             
 
-        info = {'Epoch':[self.epoch],
-                'Batch Time':[round(batch_time.avg,3)],
-                'Loss':[round(video_loss,5)],
-                'Prec@1':[round(video_top1,3)],
-                'Prec@5':[round(video_top5,3)]}
-        record_info(info, 'record/spatial/rgb_test.csv','test')
-        return video_top1, video_loss
+        # info = {'Epoch':[self.epoch],
+        #         'Batch Time':[round(batch_time.avg,3)],
+        #         'Loss':[round(video_loss,5)],
+        #         'Prec@1':[round(video_top1,3)],
+        #         'Prec@5':[round(video_top5,3)]}
+        # record_info(info, 'record/spatial/rgb_test.csv','test')
+        # return video_top1, video_loss
 
     def frame2_video_level_accuracy(self):
             
@@ -230,7 +247,7 @@ class Spatial_CNN():
         video_level_preds = np.zeros((len(self.dic_video_level_preds),101))
         video_level_labels = np.zeros(len(self.dic_video_level_preds))
         ii=0
-        for name in sorted(self.dic_video_level_preds.keys()):
+        for name in self.dic_video_level_preds.keys():
         
             preds = self.dic_video_level_preds[name]
             label = int(self.test_video[name])-1
@@ -256,9 +273,43 @@ class Spatial_CNN():
 
 
 
+    def get_buaa_result(self):
 
+        def write_csv(results, file_name):
+            import csv
+            with open(file_name, 'w') as f:
+                writer = csv.writer(f)
+                writer.writerow(['video', 'label'])
+                writer.writerows(results)
 
+        correct = 0
+        video_level_preds = np.zeros((len(self.dic_video_level_preds), 101))
+        video_level_labels = np.zeros(len(self.dic_video_level_preds))
+        ii = 0
 
+        final_result = []
+
+        for name in self.dic_video_level_preds.keys():
+
+            preds = self.dic_video_level_preds[name]
+            label = int(self.test_video[name])
+
+            video_level_preds[ii, :] = preds
+            video_level_labels[ii] = label
+            ii += 1
+            if np.argmax(preds) == (label):
+                correct += 1
+
+            file = "{}/v_{}.avi".format(name.split("_")[0], name)
+            pred = np.argmax(preds) + 1
+
+            final_result.append((file, pred))
+
+            if pred == label:
+                correct += 1
+
+        write_csv(final_result, "./submission.csv")
+        print("acc : {:.3f} %".format(correct / len(self.dic_video_level_preds)))
 
 if __name__=='__main__':
     main()

@@ -34,12 +34,12 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='man
 def main():
     global arg
     arg = parser.parse_args()
-    print arg
+    print(arg)
 
     #Prepare DataLoader
     data_loader = dataloader.Motion_DataLoader(
                         BATCH_SIZE=arg.batch_size,
-                        num_workers=8,
+                        num_workers=0,
                         path='/home/ubuntu/data/UCF101/tvl1_flow/',
                         ucf_list='/home/ubuntu/cvlab/pytorch/ucf101_two_stream/github/UCF_list/',
                         ucf_split='01',
@@ -93,16 +93,16 @@ class Motion_CNN():
     def resume_and_evaluate(self):
         if self.resume:
             if os.path.isfile(self.resume):
-                print("==> loading checkpoint '{}'".format(self.resume))
+                print(("==> loading checkpoint '{}'".format(self.resume)))
                 checkpoint = torch.load(self.resume)
                 self.start_epoch = checkpoint['epoch']
                 self.best_prec1 = checkpoint['best_prec1']
                 self.model.load_state_dict(checkpoint['state_dict'])
                 self.optimizer.load_state_dict(checkpoint['optimizer'])
-                print("==> loaded checkpoint '{}' (epoch {}) (best_prec1 {})"
-                  .format(self.resume, checkpoint['epoch'], self.best_prec1))
+                print(("==> loaded checkpoint '{}' (epoch {}) (best_prec1 {})"
+                  .format(self.resume, checkpoint['epoch'], self.best_prec1)))
             else:
-                print("==> no checkpoint found at '{}'".format(self.resume))
+                print(("==> no checkpoint found at '{}'".format(self.resume)))
         if self.evaluate:
             self.epoch=0
             prec1, val_loss = self.validate_1epoch()
@@ -134,7 +134,7 @@ class Motion_CNN():
             },is_best,'record/motion/checkpoint.pth.tar','record/motion/model_best.pth.tar')
 
     def train_1epoch(self):
-        print('==> Epoch:[{0}/{1}][training stage]'.format(self.epoch, self.nb_epochs))
+        print(('==> Epoch:[{0}/{1}][training stage]'.format(self.epoch, self.nb_epochs)))
 
         batch_time = AverageMeter()
         data_time = AverageMeter()
@@ -185,7 +185,7 @@ class Motion_CNN():
         record_info(info, 'record/motion/opf_train.csv','train')
 
     def validate_1epoch(self):
-        print('==> Epoch:[{0}/{1}][validation stage]'.format(self.epoch, self.nb_epochs))
+        print(('==> Epoch:[{0}/{1}][validation stage]'.format(self.epoch, self.nb_epochs)))
 
         batch_time = AverageMeter()
         losses = AverageMeter()
@@ -214,7 +214,7 @@ class Motion_CNN():
             nb_data = preds.shape[0]
             for j in range(nb_data):
                 videoName = keys[j].split('-',1)[0] # ApplyMakeup_g01_c01
-                if videoName not in self.dic_video_level_preds.keys():
+                if videoName not in list(self.dic_video_level_preds.keys()):
                     self.dic_video_level_preds[videoName] = preds[j,:]
                 else:
                     self.dic_video_level_preds[videoName] += preds[j,:]

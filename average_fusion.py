@@ -23,8 +23,8 @@ if __name__ == '__main__':
                                     ucf_split='01')
     train_loader,val_loader,test_video = dataloader.run()
 
-    video_level_preds = np.zeros((len(rgb.keys()),101))
-    video_level_labels = np.zeros(len(rgb.keys()))
+    video_level_preds = np.zeros((len(list(rgb.keys())),101))
+    video_level_labels = np.zeros(len(list(rgb.keys())))
     correct=0
     ii=0
     for name in sorted(rgb.keys()):   
@@ -44,4 +44,4 @@ if __name__ == '__main__':
         
     top1,top5 = accuracy(video_level_preds, video_level_labels, topk=(1,5))     
                                 
-    print top1,top5
+    print(top1,top5)

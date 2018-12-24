@@ -226,7 +226,7 @@ def cross_modality_pretrain(conv1_weight, channel):
     return new_conv1_weight
 
 def weight_transform(model_dict, pretrain_dict, channel):
-    weight_dict  = {k:v for k, v in pretrain_dict.items() if k in model_dict}
+    weight_dict  = {k:v for k, v in list(pretrain_dict.items()) if k in model_dict}
     #print pretrain_dict.keys()
     w3 = pretrain_dict['conv1.weight']
     #print type(w3)
@@ -242,5 +242,5 @@ def weight_transform(model_dict, pretrain_dict, channel):
 #Test network
 if __name__ == '__main__':
     model = resnet34(pretrained= True, channel=10)
-    print model
+    print(model)
      
