@@ -1,7 +1,6 @@
 import csv
 
-
-solution_path = "./submission.csv"
+solution_path = "./submission_fusion.csv"
 standart_list = "../data/datalists/testlist.txt"
 
 predicted = {}
@@ -26,7 +25,7 @@ with open(standart_list, "r") as standart_list:
         except:
             print(line)
 
-with open("./new_submission.csv", 'w') as f:
+with open("./new_submission_fusion.csv", 'w') as f:
     writer = csv.writer(f)
     writer.writerow(['video', 'label'])
     writer.writerows(result)
